@@ -114,7 +114,7 @@ def main():
         config = model.config
     tokenizer = model.init_tokenizer()
     extractor = Extractor.get_class(model.model_type)(tokenizer, config)
-
+    
     print("Loading data...")
     train_dataset = SpeechDataset(extractor, data_args)
     # Start trainer

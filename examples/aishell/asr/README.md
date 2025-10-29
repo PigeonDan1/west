@@ -10,6 +10,8 @@ where `wav` is the wav path, `txt` is the transcript.
 
 To train the model, just run
 
+First, change `wenet_model_name_or_path` and `pretrained_ckpt_path` to the shared path, then
+
 ``` shell
 bash run.sh --stage train
 ```

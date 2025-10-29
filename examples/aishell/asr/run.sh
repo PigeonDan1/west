@@ -1,5 +1,5 @@
 # Copyright 2025 Binbin Zhang(binbzha@qq.com)
-
+export HF_ENDPOINT="https://hf-mirror.com"
 [ ! -s west ] && ln -s ../../../west
 [ ! -s tools ] && ln -s ../../../tools
 export PYTHONPATH=$PYTHONPATH:$PWD
@@ -34,11 +34,11 @@ if [ $stage == "train" ] || [ $stage == "all" ]; then
         --pack_size 8192 \
         --bf16 True \
         --max_steps $steps \
-        --per_device_train_batch_size 1 \
+        --per_device_train_batch_size 12 \
         --per_device_eval_batch_size 1 \
         --gradient_accumulation_steps 4 \
         --save_strategy "steps" \
-        --save_steps 100 \
+        --save_steps 1000 \
         --save_total_limit 100 \
         --learning_rate 3e-4 \
         --weight_decay 0.01 \

@@ -1,6 +1,6 @@
 # Copyright (c) 2025 Binbin Zhang(binbzha@qq.com)
 
-from typing import Optional
+from typing import Optional,  Dict
 
 import torch
 import wenet
@@ -12,7 +12,9 @@ from transformers import (AutoConfig, AutoModelForCausalLM, AutoTokenizer,
 from west.utils.utils import freeze_module
 
 from .configuration_touch_asu import TouchASUConfig
-
+from pathlib import Path
+import re
+from wenet.dataset.kaldi_io import read_mat
 
 class ProjectorCov1d(nn.Module):
 
@@ -39,6 +41,32 @@ class ProjectorCov1d(nn.Module):
         x = self.linear2(x)
         return x
 
+class ProjectorConcat(nn.Module):
+    # Simple concatenation + linear projection for Fireredasr
+    def __init__(self, encoder_dim, llm_dim, downsample_rate=2):
+        super().__init__()
+        self.k = downsample_rate
+        self.linear1 = nn.Linear(encoder_dim * downsample_rate, llm_dim)
+        self.relu = nn.ReLU()
+        self.linear2 = nn.Linear(llm_dim, llm_dim)
+
+    def forward(self, x):
+        batch_size, seq_len, feat_dim = x.size()
+        num_frames_to_discard = seq_len % self.k
+        if num_frames_to_discard > 0:
+            x = x[:, :-num_frames_to_discard, :]
+        seq_len = x.size(1)
+
+        x = x.contiguous()
+        x = x.view(
+            batch_size, seq_len // self.k, feat_dim * self.k
+        )
+
+        x = self.linear1(x)
+        x = self.relu(x)
+        x = self.linear2(x)
+
+        return x
 
 class TouchASU(PreTrainedModel, GenerationMixin):
     """ LLM based Automatic Speech Understanding
@@ -59,8 +87,10 @@ class TouchASU(PreTrainedModel, GenerationMixin):
         self.encoder = wenet.load_model(config.wenet_model_name_or_path)
         encoder_dim = self.encoder.encoder.output_size()
         config.hidden_size = llm_config.hidden_size  # for deepseed training
-        self.projector = ProjectorCov1d(config, encoder_dim,
-                                        llm_config.hidden_size)
+        # self.projector = ProjectorCov1d(config, encoder_dim,
+        #                                 llm_config.hidden_size)
+        self.projector = ProjectorConcat(encoder_dim, llm_config.hidden_size,
+                                        downsample_rate=config.encoder_projector_ds_rate) # custom projector
         total_params = sum(p.numel() for p in self.projector.parameters())
         print('Projector total params: {:.2f}M'.format(total_params / 1024 /
                                                        1024))
@@ -69,12 +99,28 @@ class TouchASU(PreTrainedModel, GenerationMixin):
             self.llm = get_peft_model(self.llm, lora_config)
             self.llm.print_trainable_parameters()
 
+        if config.pretrained_ckpt_path is not None: # load pretrained checkpoint
+            self.init_weights(config.pretrained_ckpt_path)
+        
         self.freeze_encoder()
         if config.lora_config is None:
+            print("Freezing LLM as no LoRA config is provided.")
             self.freeze_llm()
+        
 
     def tie_weights(self):
         return self.llm.tie_weights()
+
+    def init_weights(self, pretrained_ckpt_path: str): 
+        # init weights from pretrained checkpoint, encoder has been loaded
+
+        model_path = pretrained_ckpt_path
+        projector_path = Path(model_path) / "projector.pt"
+        llm_path = Path(model_path) / "llm.pt"
+        self.projector.load_state_dict(torch.load(projector_path))
+        self.llm.load_state_dict(torch.load(llm_path))
+        
+        print(f"Loaded pretrained checkpoint from {model_path} into TouchASU model.")
 
     def get_speech_embeddings(self, audio_features, audio_features_lengths):
         speech_emb, mask = self.encoder._forward_encoder(
@@ -170,6 +216,10 @@ class TouchASU(PreTrainedModel, GenerationMixin):
         freeze_module(self.encoder)
         self.encoder.eval()
 
+    def freeze_projector(self):
+        freeze_module(self.projector)
+        self.projector.eval()
+
     def freeze_llm(self):
         freeze_module(self.llm)
 
@@ -181,3 +231,18 @@ class TouchASU(PreTrainedModel, GenerationMixin):
         # We only support QWen now
         tokenizer.bos_token = tokenizer.eos_token
         return tokenizer
+
+
+### extrac functions for loading encoder from checkpoint ###
+def _report_load(src_keys, model, submodule_name):
+    """
+    print which keys are loaded into the given submodule
+    """
+    model_keys = set(dict(model.named_parameters()).keys())
+    hit_keys = sorted(src_keys & model_keys)
+    print(f"\n[DEBUG] {submodule_name} hit {len(hit_keys)}/{len(src_keys)} parameters:")
+    # for k in hit_keys:
+    #     print(f"       {k}")
+    if not hit_keys:
+        print("       (None Matched)")
+    return hit_keys

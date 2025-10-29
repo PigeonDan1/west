@@ -12,6 +12,7 @@ class TouchASUConfig(PretrainedConfig):
         self,
         llm_model_name_or_path: str = 'Qwen/Qwen2-7B',
         wenet_model_name_or_path: str = '',
+        pretrained_ckpt_path: Optional[str] = None,
         encoder_ds_rate: int = 4,
         encoder_projector_ds_rate: int = 2,
         projector_hidden_size: int = 2048,
@@ -31,6 +32,7 @@ class TouchASUConfig(PretrainedConfig):
         self.hidden_size = hidden_size
         self.max_speech_frames = max_speech_frames
         self.min_speech_frames = min_speech_frames
+        self.pretrained_ckpt_path = pretrained_ckpt_path
 
 
 __all__ = ["TouchASUConfig"]
