@@ -222,6 +222,7 @@ class TouchASU(PreTrainedModel, GenerationMixin):
 
     def freeze_llm(self):
         freeze_module(self.llm)
+        self.llm.eval()
 
     def init_tokenizer(self):
         tokenizer = AutoTokenizer.from_pretrained(
@@ -231,18 +232,3 @@ class TouchASU(PreTrainedModel, GenerationMixin):
         # We only support QWen now
         tokenizer.bos_token = tokenizer.eos_token
         return tokenizer
-
-
-### extrac functions for loading encoder from checkpoint ###
-def _report_load(src_keys, model, submodule_name):
-    """
-    print which keys are loaded into the given submodule
-    """
-    model_keys = set(dict(model.named_parameters()).keys())
-    hit_keys = sorted(src_keys & model_keys)
-    print(f"\n[DEBUG] {submodule_name} hit {len(hit_keys)}/{len(src_keys)} parameters:")
-    # for k in hit_keys:
-    #     print(f"       {k}")
-    if not hit_keys:
-        print("       (None Matched)")
-    return hit_keys

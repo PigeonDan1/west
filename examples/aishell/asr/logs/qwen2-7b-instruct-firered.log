@@ -19,3 +19,27 @@ trainable params: 161,480,704 || all params: 7,777,097,216 || trainable%: 2.0764
 
 [DEBUG] LLM-LoRA hit 392/392 parameters:
 Loaded pretrained checkpoint from /pengjing/workspace/nfs/model/pengzhendong/FireRedASR-LLM-L/model.pth.tar into TouchASU model.
+W1029 21:30:32.671000 129314 site-packages/torch/distributed/elastic/agent/server/api.py:719] Received Signals.SIGHUP death signal, shutting down workers
+W1029 21:30:32.699000 129314 site-packages/torch/distributed/elastic/multiprocessing/api.py:897] Sending process 129447 closing signal SIGHUP
+Traceback (most recent call last):
+  File "/pengjing/miniconda/envs/west/bin/torchrun", line 7, in <module>
+    sys.exit(main())
+  File "/pengjing/miniconda/envs/west/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 355, in wrapper
+    return f(*args, **kwargs)
+  File "/pengjing/miniconda/envs/west/lib/python3.10/site-packages/torch/distributed/run.py", line 918, in main
+    run(args)
+  File "/pengjing/miniconda/envs/west/lib/python3.10/site-packages/torch/distributed/run.py", line 909, in run
+    elastic_launch(
+  File "/pengjing/miniconda/envs/west/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/pengjing/miniconda/envs/west/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 260, in launch_agent
+    result = agent.run()
+  File "/pengjing/miniconda/envs/west/lib/python3.10/site-packages/torch/distributed/elastic/metrics/api.py", line 137, in wrapper
+    result = f(*args, **kwargs)
+  File "/pengjing/miniconda/envs/west/lib/python3.10/site-packages/torch/distributed/elastic/agent/server/api.py", line 711, in run
+    result = self._invoke_run(role)
+  File "/pengjing/miniconda/envs/west/lib/python3.10/site-packages/torch/distributed/elastic/agent/server/api.py", line 870, in _invoke_run
+    time.sleep(monitor_interval)
+  File "/pengjing/miniconda/envs/west/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/api.py", line 84, in _terminate_process_handler
+    raise SignalException(f"Process {os.getpid()} got signal: {sigval}", sigval=sigval)
+torch.distributed.elastic.multiprocessing.api.SignalException: Process 129314 got signal: 1

@@ -29,14 +29,14 @@ fi
 if [ $stage == "train" ] || [ $stage == "all" ]; then
     torchrun --standalone --nnodes=1 --nproc_per_node=$num_gpus west/bin/train.py \
         --model_config_or_dir $model_conf \
-        --data_path $data/train.jsonl \
+        --data_path $data/test.jsonl \
         --output_dir $dir \
         --pack_size 8192 \
         --bf16 True \
         --max_steps $steps \
-        --per_device_train_batch_size 12 \
+        --per_device_train_batch_size 1 \
         --per_device_eval_batch_size 1 \
-        --gradient_accumulation_steps 4 \
+        --gradient_accumulation_steps 1 \
         --save_strategy "steps" \
         --save_steps 1000 \
         --save_total_limit 100 \

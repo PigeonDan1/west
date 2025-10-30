@@ -54,7 +54,6 @@ class MyTrainer(Trainer):
                     "train_loss": loss.detach().cpu().item(),
                     "train_accuracy": accuracy
                 })
-
         if self.args.n_gpu > 1:
             loss = loss.mean()
         loss = loss / self.args.gradient_accumulation_steps
@@ -114,8 +113,6 @@ def main():
         config = model.config
     tokenizer = model.init_tokenizer()
     extractor = Extractor.get_class(model.model_type)(tokenizer, config)
-    
-    print("Loading data...")
     train_dataset = SpeechDataset(extractor, data_args)
     # Start trainer
     trainer = MyTrainer(
