@@ -1,0 +1,6 @@
+[submodule "examples/aishell/asr/examples/aishell/asr/3D-Speaker"]
+	path = examples/aishell/asr/examples/aishell/asr/3D-Speaker
+	url = https://github.com/modelscope/3D-Speaker.git
+[submodule "examples/aishell/asr/3D-Speaker"]
+	path = examples/aishell/asr/3D-Speaker
+	url = https://github.com/modelscope/3D-Speaker.git

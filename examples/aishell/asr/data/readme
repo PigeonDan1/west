@@ -1,0 +1,40 @@
+# 处理流程
+
+## 初始化
+
+```shell
+    cat /F00120240032/audio_segments/{Aishell-4_segments,Aishell-5_segments,MLC-Challenge_segments}.jsonl > data/train.jsonl 
+    md5sum data/train.jsonl # c7fb5101649eca85796777f3b8addb2c  train.jsonl
+    mv data/train.jsonl data/train.relative.jsonl
+```
+## 检查音频长度
+
+```shell
+    python local/check_wav_shape.py --i data/train.jsonl
+    # 输出为data/check_wav_shape.2025-11-15-06-10-52.log，没有发现channel不为1或长度为0的音频
+    mv data/train.jsonl data/train.checked.jsonl
+```
+
+## 丢弃MLC中0.00开始的音频
+
+```shell
+    awk '
+        /0\.00/ && /MLC-Challenge_segment_audio/ {print > "data/train.discarded.jsonl"; next}
+        {print > "data/train.jsonl"}
+    ' data/train.checked.jsonl
+
+    ls data/*.jsonl | xargs wc -l  # 查看各文件行数
+    # 64877 data/train.checked.jsonl
+    # 64877 data/train.relative.jsonl
+    #  1788 data/train.discarded.jsonl
+    # 63089 data/train.jsonl
+```
+
+# 最终文件的md5sum
+```shell
+    ls data/*.jsonl | xargs md5sum
+    # 606429be7fe0675f4888ec88f0a3442b  data/train.checked.jsonl
+    # 9c30ee40530d0858160f0b5f317e124a  data/train.discarded.jsonl
+    # 6aa2aa0664aba25adf81df5367fafcbe  data/train.jsonl
+    # c7fb5101649eca85796777f3b8addb2c  data/train.relative.jsonl
+```

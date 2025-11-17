@@ -1,0 +1,33 @@
+{
+  "encoder_ds_rate": 4,
+  "encoder_projector_ds_rate": 2,
+  "llm_model_name_or_path": "/wangshuai/models/Qwen2-7B-Instruct",
+  "lora_config": {
+    "inference_mode": false,
+    "lora_alpha": 16,
+    "lora_dropout": 0.05,
+    "r": 64,
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "up_proj",
+      "gate_proj",
+      "down_proj"
+    ],
+    "task_type": "CAUSAL_LM"
+  },
+  "model_type": "touch_asu_speaker_attributed",
+  "projector_hidden_size": 3584,
+  "transformers_version": "4.52.3",
+  "wenet_model_name_or_path": "/F00120240032/SLD/tmp/ckpt_pretrained/firered_wenet",
+  "speaker_encoder_id": "iic/speech_campplus_sv_zh_en_16k-common_advanced",
+  "speaker_emb_size": 512,
+  "speaker_downsample_rate": 4,
+  "asr_projector_frozen": true,
+  "speaker_projector_frozen": false,
+  "speaker_downsampler_frozen": false,
+  "pretrained_ckpt_path": "/wangshuai/workspace/west/examples/aishell/asr/pretrained/checkpoint-4000"
+}
+

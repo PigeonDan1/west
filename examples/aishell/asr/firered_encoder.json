@@ -1,0 +1,60 @@
+FireRedModel(
+  (encoder): FireRedConformerEncoder(
+    (global_cmvn): GlobalCMVN()
+    (embed): FireRedConv2dSubsampling4(
+      (pos_enc): FireRedRelPositionalEncoding(
+        (dropout): Dropout(p=0.1, inplace=False)
+      )
+      (conv): Sequential(
+        (0): Conv2d(1, 32, kernel_size=(3, 3), stride=(2, 2))
+        (1): ReLU()
+        (2): Conv2d(32, 32, kernel_size=(3, 3), stride=(2, 2))
+        (3): ReLU()
+      )
+      (out): Sequential(
+        (0): Linear(in_features=608, out_features=1280, bias=True)
+      )
+    )
+    (after_norm): LayerNorm((1280,), eps=1e-05, elementwise_affine=True)
+    (encoders): ModuleList(
+      (0-15): 16 x FireRedConformerEncoderLayer(
+        (self_attn): FiredRelPositionMultiHeadedAttention(
+          (linear_q): Linear(in_features=1280, out_features=1280, bias=False)
+          (linear_k): Linear(in_features=1280, out_features=1280, bias=False)
+          (linear_v): Linear(in_features=1280, out_features=1280, bias=False)
+          (linear_out): Linear(in_features=1280, out_features=1280, bias=False)
+          (dropout): Dropout(p=0.0, inplace=False)
+          (linear_pos): Linear(in_features=1280, out_features=1280, bias=False)
+          (layer_norm_q): LayerNorm((1280,), eps=1e-05, elementwise_affine=True)
+          (layer_norm_k): LayerNorm((1280,), eps=1e-05, elementwise_affine=True)
+          (layer_norm_v): LayerNorm((1280,), eps=1e-05, elementwise_affine=True)
+        )
+        (feed_forward): PositionwiseFeedForward(
+          (w_1): Linear(in_features=1280, out_features=5120, bias=True)
+          (activation): SiLU()
+          (dropout): Dropout(p=0.1, inplace=False)
+          (w_2): Linear(in_features=5120, out_features=1280, bias=True)
+        )
+        (feed_forward_macaron): PositionwiseFeedForward(
+          (w_1): Linear(in_features=1280, out_features=5120, bias=True)
+          (activation): SiLU()
+          (dropout): Dropout(p=0.1, inplace=False)
+          (w_2): Linear(in_features=5120, out_features=1280, bias=True)
+        )
+        (conv_module): ConvolutionModule(
+          (pointwise_conv1): Conv1d(1280, 5120, kernel_size=(1,), stride=(1,), bias=False)
+          (depthwise_conv): Conv1d(2560, 2560, kernel_size=(33,), stride=(1,), padding=(16,), groups=2560, bias=False)
+          (norm): LayerNorm((2560,), eps=1e-05, elementwise_affine=True)
+          (pointwise_conv2): Conv1d(2560, 1280, kernel_size=(1,), stride=(1,), bias=False)
+          (activation): SiLU()
+        )
+        (norm_ff): LayerNorm((1280,), eps=1e-05, elementwise_affine=True)
+        (norm_ff_macaron): LayerNorm((1280,), eps=1e-05, elementwise_affine=True)
+        (norm_conv): LayerNorm((1280,), eps=1e-05, elementwise_affine=True)
+        (norm_final): LayerNorm((1280,), eps=1e-05, elementwise_affine=True)
+        (dropout): Dropout(p=0.1, inplace=False)
+        (norm_mha): Identity()
+      )
+    )
+  )
+)
