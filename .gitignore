@@ -1,0 +1,11 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[codz]
+*$py.class
+
+# C extensions
+*.so
+
+# recipe related
+examples/aishell/asr/exp
+examples/aishell/asr/pretrained

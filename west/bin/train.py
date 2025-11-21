@@ -22,6 +22,21 @@ class TrainingArguments(TrainingArguments):
     optim: str = field(default="adafactor")
     model_config_or_dir: str = field(default='')
 
+'''
+from transformers import AutoTokenizer
+tokenizer = AutoTokenizer.from_pretrained(
+    "/wangshuai/models/Qwen2-7B-Instruct",
+    padding_side="right",
+)
+# We only support QWen now
+tokenizer.bos_token = tokenizer.eos_token
+
+
+labels_list = labels.squeeze().cpu().tolist()
+tokenizer.decode([_ for _ in labels_list if _ != -100])
+preds_list = preds.squeeze().cpu().tolist()
+tokenizer.decode([_ for _ in preds_list if _ != -100])
+'''
 
 class MyTrainer(Trainer):
 
@@ -45,7 +60,10 @@ class MyTrainer(Trainer):
             labels = inputs["labels"][..., 1:].contiguous()
             preds = torch.argmax(logits, dim=-1)
             mask = labels != -100
+            print(mask.sum(), mask.shape)
+            print(preds)
             correct = (preds == labels) & mask
+            print(correct.sum())
             accuracy = correct.sum().item() / mask.sum().item()
             interval = \
                 self.args.logging_steps * self.args.gradient_accumulation_steps

@@ -8,6 +8,8 @@ from west.models.touch_chat import TouchChat, TouchChatConfig
 from west.models.touch_flow import TouchFlow, TouchFlowConfig
 from west.models.touch_tts import TouchTTS, TouchTTSConfig
 
+
+
 AutoConfig.register("touch_asu", TouchASUConfig)
 AutoModel.register(TouchASUConfig, TouchASU)
 AutoConfig.register("touch_chat", TouchChatConfig)
@@ -19,3 +21,8 @@ AutoModel.register(TouchTTSConfig, TouchTTS)
 
 AutoConfig.register("osum_echat", OSUMEChatConfig)
 AutoModel.register(OSUMEChatConfig, OSUMEChat)
+
+# speaker attributed ASU
+from west.models.touch_asu import TouchASUSpeakerAttributed, TouchASUSpeakerAttributedConfig
+AutoConfig.register("touch_asu_speaker_attributed", TouchASUSpeakerAttributedConfig)
+AutoModel.register(TouchASUSpeakerAttributedConfig, TouchASUSpeakerAttributed)

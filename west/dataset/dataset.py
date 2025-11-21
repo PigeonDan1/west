@@ -17,7 +17,6 @@ from transformers.trainer_pt_utils import LabelSmoother
 
 from west.dataset.extractor import Extractor
 
-
 @dataclass
 class DataArguments:
     data_path: str = field(default=None,
@@ -132,6 +131,11 @@ class SpeechDataset(IterableDataset):
         for k in self.extractor.fields_pack_offset:
             ret[k] = torch.tensor([0] * len(seqs), dtype=torch.int)
         offset = 0
+
+        # add raw waveforms for speaker encoder
+        if len(seqs) > 0 and 'raw_audio_16k' in seqs[0]:
+            ret['raw_audio_16k'] = []
+
         for i, seq in enumerate(seqs):
             for k in self.extractor.fields_pack_offset:
                 ret[k][i] = offset + seq[k]
@@ -142,11 +146,22 @@ class SpeechDataset(IterableDataset):
             ret['position_ids'][offset:offset + seq_len] = torch.arange(
                 seq_len, dtype=torch.int)
             offset += seq_len
+
+            # add raw waveforms for speaker encoder
+            if 'raw_audio_16k' in seq:
+                ret['raw_audio_16k'].append(seq['raw_audio_16k'])
+            else:
+                # hopefully never reach here, since 'has_audio' is always True
+                # to avoid error when some data has no raw audio
+                # ret['raw_audio_16k'].append(torch.Tensor([]))
+                logging.warning(
+                    f"Data {i} has no raw audio for speaker encoder.")
+                #logging.warning(f'content: {seq}')
+
         ret['batch_idx'] = torch.tensor([0] * len(seqs), dtype=torch.int)
         ret['input_ids'] = ret['input_ids'].unsqueeze(0)
         ret['labels'] = ret['labels'].unsqueeze(0)
         ret['position_ids'] = ret['position_ids'].unsqueeze(0)
-
         ret = ret | self._batch(seqs, pack=True)
         return ret
 
