@@ -23,7 +23,7 @@ def main():
     parser = HfArgumentParser((DataArguments, DecodeArguments))
     data_args, decode_args = parser.parse_args_into_dataclasses()
     model = AutoModel.from_pretrained(decode_args.model_dir)
-
+    
     tokenizer = model.init_tokenizer()
     extractor = Extractor.get_class(model.model_type)(tokenizer,
                                                       model.config,

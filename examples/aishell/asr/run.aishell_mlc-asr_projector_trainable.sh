@@ -4,22 +4,22 @@ export HF_ENDPOINT="https://hf-mirror.com"
 [ ! -s tools ] && ln -s ../../../tools
 export PYTHONPATH=$PYTHONPATH:$PWD
 # Change this to all your available gpus, such as "0,1,2,3"
-export CUDA_VISIBLE_DEVICES="0"
+export CUDA_VISIBLE_DEVICES="0,1,2"
 num_gpus=$(echo $CUDA_VISIBLE_DEVICES | awk -F ',' '{print NF}')
 
 set -euo pipefail
 
 stage=train # data/train/decode
 data=data
-dir=exp/Qwen2-7B-Instruct-firered/debug/manual_resume-aishell_mlc_data-stage1-asr_projector_trainable-from_ziyi_4000_steps #stage1-asr_projector_frozen-from_ziyi_4000_steps
-steps=100000 #5000  # training steps
+dir=exp/firered_from_ziyi_stage2_all_projector_lora #stage1-asr_projector_frozen-from_ziyi_4000_steps
+steps=10000 #5000  # training steps
 
 # Available model_conf are in conf, such as:
 # conf/qwen2-7b_firered.json
 # conf/qwen3-1.7b-lora_firered.json
 # conf/qwen2-7b-lora_paraformer.json
 # conf/qwen2-1.5b-lora_whisper-large-v3-turbo.json
-model_conf="conf/debug.qwen2-7b_firered-speaker_attributed-asr_projector_trainable.json" #conf/qwen2-7b_firered.json
+model_conf="conf/qwen2-7b_firered_sa_asr_projector_lora.jsonl" #conf/qwen2-7b_firered.json
 decode_conf=conf/generation_config.json
 
 . tools/parse_options.sh || exit 1;
@@ -36,18 +36,18 @@ if [ $stage == "train" ] || [ $stage == "all" ]; then
     # pack_size 16384
     torchrun --standalone --nnodes=1 --nproc_per_node=$num_gpus west/bin/train.py \
         --model_config_or_dir $model_conf \
-        --data_path $data/train.jsonl \
+        --data_path $data/train.clean.jsonl \
         --output_dir $dir \
-        --pack_size 1024 \
+        --pack_size 6000 \
         --bf16 True \
         --max_steps $steps \
         --per_device_train_batch_size 1 \
         --per_device_eval_batch_size 1 \
         --gradient_accumulation_steps 1 \
         --save_strategy "steps" \
-        --save_steps 50 \
+        --save_steps 1000 \
         --save_total_limit 100 \
-        --learning_rate 3e-4 \
+        --learning_rate 5e-5 \
         --weight_decay 0.01 \
         --adam_beta2 0.95 \
         --warmup_ratio 0.5 \
@@ -95,13 +95,13 @@ if [ $stage == "decode" ] || [ $stage == "all" ]; then
     # python tools/compute_wer.py --char=1 --v=1 \
     #     $data/test.jsonl $mdir/train_head_1_duplicated_result.jsonl > $mdir/train_head_1_duplicated_result.wer
 
-    mdir=exp/Qwen2-7B-Instruct-firered/debug/aishell_mlc_data-stage1-asr_projector_trainable-from_ziyi_4000_steps/checkpoint-1050
+    mdir=/pengjing/workspace/project/west/examples/aishell/asr/exp/firered_from_ziyi_all_projector_lora/checkpoint-4000
     cp $decode_conf $mdir
     python west/bin/decode.py \
         --data_path $data/test.haoyu.jsonl \
         --model_dir $mdir \
-        --result_path $mdir/aishell4_train_head20_result.jsonl
-    python tools/compute_wer.py --char=1 --v=1 \
-        $data/test.haoyu.jsonl $mdir/aishell4_train_head20_result.jsonl > $mdir/aishell4_train_head20_result.wer
+        --result_path $mdir/train_test_result.jsonl
+    # python tools/compute_wer.py --char=1 --v=1 \
+    #     $data/test.haoyu.jsonl $mdir/aishell4_train_head20_result.jsonl > $mdir/aishell4_train_head20_result.wer
 
 fi

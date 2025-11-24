@@ -179,7 +179,7 @@ class ExtractorTouchASUSpeakerAttributed(ExtractorTouchASU):
                     'role': 'user',
                     'content': [{
                         'type': 'text',
-                        'text': 'Transcribe the Speech'
+                        'text': 'Transcribe the Speech with Speaker Labels'
                     }, {
                         'type': 'audio',
                         'audio': item['wav']

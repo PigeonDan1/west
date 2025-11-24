@@ -11,11 +11,11 @@ from deepspeed.utils.zero_to_fp32 import get_fp32_state_dict_from_zero_checkpoin
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ckpt_dir",default="/wangshuai/workspace/west/examples/aishell/asr/exp/Qwen2-7B-Instruct-firered/checkpoint-4000", type=pathlib.Path,
+    parser.add_argument("--ckpt_dir",default="/pengjing/workspace/project/west/examples/aishell/asr/exp/firered_stage2_from_ziyi_ckpt_7500_all_projector_lora/checkpoint-500", type=pathlib.Path,
                         help="DeepSpeed checkpoint 目录（含 optimizer 子目录）")
     parser.add_argument("-t", "--tag", default=None,
                         help="checkpoint tag，默认用 ckpt_dir 名字后的数字")
-    parser.add_argument("-o", "--output", default="fireredllm_pretrained.pt",
+    parser.add_argument("-o", "--output", default="/pengjing/workspace/nfs/tmp/ckpt/trained/model.pt",
                         help="输出普通 pt 文件名")
     return parser.parse_args()
 

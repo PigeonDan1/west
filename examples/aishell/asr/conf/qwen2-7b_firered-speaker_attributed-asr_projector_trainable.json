@@ -1,7 +1,7 @@
 {
   "encoder_ds_rate": 4,
   "encoder_projector_ds_rate": 2,
-  "llm_model_name_or_path": "/wangshuai/models/Qwen2-7B-Instruct",
+  "llm_model_name_or_path": "/pengjing/workspace/github/FireRedASR/pretrained_models/FireRedASR-LLM-L/Qwen2-7B-Instruct",
   "lora_config": {
     "inference_mode": false,
     "lora_alpha": 16,
@@ -21,13 +21,12 @@
   "model_type": "touch_asu_speaker_attributed",
   "projector_hidden_size": 3584,
   "transformers_version": "4.52.3",
-  "wenet_model_name_or_path": "/F00120240032/SLD/tmp/ckpt_pretrained/firered_wenet",
+  "wenet_model_name_or_path": "firered",
   "speaker_encoder_id": "iic/speech_campplus_sv_zh_en_16k-common_advanced",
   "speaker_emb_size": 512,
   "speaker_downsample_rate": 4,
   "asr_projector_frozen": false,
   "speaker_projector_frozen": false,
   "speaker_downsampler_frozen": false,
-  "pretrained_ckpt_path": "/wangshuai/workspace/west/examples/aishell/asr/pretrained/checkpoint-4000"
+  "pretrained_ckpt_path": "/pengjing/workspace/nfs/tmp/ckpt"
 }
-

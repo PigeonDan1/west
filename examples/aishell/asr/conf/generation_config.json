@@ -4,6 +4,6 @@
       151645,
       151643
   ],
-  "max_new_tokens": 50,
+  "max_new_tokens": 512,
   "transformers_version": "4.37.0"
 }

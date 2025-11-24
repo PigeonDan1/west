@@ -294,6 +294,7 @@ class TouchASUSpeakerAttributed(TouchASU):
         if config.asr_projector_frozen:
             logger.warning("Freezing ASR projector.")
             self.freeze_projector()
+            self.projector.eval()
 
         if config.speaker_projector_frozen:
             logger.warning("Freezing speaker projector.")
@@ -304,6 +305,8 @@ class TouchASUSpeakerAttributed(TouchASU):
             logger.warning("Freezing speaker downsampler.")
             freeze_module(self.speaker_downsampler)
             self.speaker_downsampler.eval()
+
+        self.print_trainable_parameters()
 
     def init_weights(self, pretrained_ckpt_path: str, pt_name: str = "model.pt"): 
         # init weights from pretrained checkpoint, encoder has been loaded
@@ -487,3 +490,21 @@ class TouchASUSpeakerAttributed(TouchASU):
             **kwargs,
         )
         return model_outputs
+
+    def print_trainable_parameters(self):
+        """Print trainable parameters in the model."""
+        total_params = 0
+        trainable_params = 0
+
+        print("\n========== Trainable parameters (requires_grad=True) ==========")
+        for name, param in self.named_parameters():
+            num = param.numel()
+            total_params += num
+            if param.requires_grad:
+                trainable_params += num
+                print(f"[TRAINABLE] {name:60s} shape={tuple(param.shape)}, num_params={num}")
+
+        print("---------------------------------------------------------------")
+        print(f"Total params:     {total_params / 1e6:.2f} M")
+        print(f"Trainable params: {trainable_params / 1e6:.2f} M")
+        print("===============================================================\n")
