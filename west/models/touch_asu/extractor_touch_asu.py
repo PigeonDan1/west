@@ -135,10 +135,10 @@ class ExtractorTouchASU(Extractor):
 
 
 
-class ExtractorTouchASUSpeakerAttributed(ExtractorTouchASU):
-    model_type = 'touch_asu_speaker_attributed'
-    fields_batch_static = {'audio_offsets', 'has_audio'}
-    fields_batch_dynamic = {'audio_features', 'input_ids', 'labels', 'raw_audio_16k'}
+class ExtractorTouchASUWithDiarModule(ExtractorTouchASU):
+    model_type = 'touch_asu_with_diar_module'
+    fields_batch_static = {'audio_offsets', 'has_audio', 'raw_audio_path', 'eosd_to_soa'}
+    fields_batch_dynamic = {'audio_features', 'input_ids', 'labels'}
     fields_pack_offset = {'audio_offsets'}
 
     def __init__(self, tokenizer, model_config, inference=False):
@@ -179,8 +179,13 @@ class ExtractorTouchASUSpeakerAttributed(ExtractorTouchASU):
                     'role': 'user',
                     'content': [{
                         'type': 'text',
-                        'text': 'Transcribe the Speech with Speaker Labels'
-                    }, {
+                        'text': 'Below is a frame-level speaker activity prediction.'
+                    },
+                    {
+                        'type': 'text',
+                        'text': 'Transcribe the corresponding speech and put the speaker tag at the end of each utterance.'
+                    },
+                    {
                         'type': 'audio',
                         'audio': item['wav']
                     }]
@@ -190,6 +195,19 @@ class ExtractorTouchASUSpeakerAttributed(ExtractorTouchASU):
                     'content': item['txt']
                 },
             ]
+
+        wav = self._load_wav(item['wav'])
+        # 1. calculate original sd length
+        sd_length = math.ceil(
+            wav.shape[-1] / 16_000 * 12.5,  # 12.5 ms per frame with 16kHz audio and 25ms window with 10ms shift
+        )
+        # 2. downsample diar features
+        sd_length = math.floor(
+            sd_length / self.model_config.diar_downsample_rate
+        )
+        # print(sd_length)
+        sd_offsets = None
+        eosd_to_soa = None
 
         t0 = ''
         t1 = '<|im_end|>\n' + '<|im_start|>assistant\n'
@@ -206,9 +224,24 @@ class ExtractorTouchASUSpeakerAttributed(ExtractorTouchASU):
                     audio = msg['content']['audio']
                 elif isinstance(msg['content'], list):
                     # Here we assume the 1st is text, 2nd is audio
-                    assert len(msg['content']) == 2
-                    t0 += msg['content'][0]['text']
-                    audio = msg['content'][1]['audio']
+                    assert len(msg['content']) == 2 or len(msg['content']) == 3
+                    if len(msg['content']) == 2:
+                        t0 += msg['content'][0]['text']
+                        audio = msg['content'][1]['audio']
+                    else:   # len(msg['content']) == 3
+                        t0 += msg['content'][0]['text'] + "<|sd_bos|>\n"     # Below is a frame-level speaker activity prediction.
+                        sd_offsets = len(self.tokenizer.encode(t0))
+                        t0_to_append = "<|sd_eos|>" + msg['content'][1]['text']
+                        '''
+                            pos(end to sd) - pos(start of audio)
+                            ###### sd ###### audio ######
+                                       _^_
+                                        |
+                            eosd_to_soa calculates the middle part length
+                        '''
+                        eosd_to_soa = len(self.tokenizer.encode(t0_to_append))
+                        t0 += t0_to_append     # Transcribe the corresponding speech and put the speaker tag at the end of each utterance.
+                        audio = msg['content'][2]['audio']
                 elif isinstance(msg['content'], str):  # No audio
                     t0 += msg['content']
                     has_audio = False
@@ -232,9 +265,15 @@ class ExtractorTouchASUSpeakerAttributed(ExtractorTouchASU):
             if mel.size(0) > self.model_config.max_speech_frames or mel.size(
                     0) < self.model_config.min_speech_frames:
                 return None
-        # TODO(Binbin Zhang): Mutil-turn support
+
+        # TODO (Binbin Zhang): Mutil-turn support
         ids0 = self.tokenizer.encode(t0)
         ids1 = self.tokenizer.encode(t1)
+
+        # insert placeholders for sd token ids
+        if sd_offsets is not None:
+            ids0 = ids0[:sd_offsets] + [0] * sd_length + ids0[sd_offsets:]
+
         ids = ids0 + ids_audio + ids1
         tgt = ids0 + tgt_audio + ids1
         if not self.inference:
@@ -244,16 +283,26 @@ class ExtractorTouchASUSpeakerAttributed(ExtractorTouchASU):
         input_ids = torch.tensor(ids, dtype=torch.int)
         tgt_ids = torch.tensor(tgt, dtype=torch.long)
 
-        # Load wave for speaker encoder
-        wav = self._load_wav(item['wav'])
+        '''
+        audio_input = [item['wav']]
+
+        # predicted_segments = diar_model.diarize(audio=audio_input, batch_size=1)
+        predicted_segments, predicted_probs = diar_model.diarize(audio=audio_input, batch_size=1, include_tensor_outputs=True)
+        '''
+
+        '''
+        Below is a frame-level speaker activity prediction.<sd/>
+        Transcribe the corresponding speech and put the speaker tag at the end of each utterance.
+        '''
 
         return {
             'input_ids': input_ids,
             'labels': tgt_ids,
             'audio_features': mel,
             'audio_offsets': len(ids0),
+            'eosd_to_soa': eosd_to_soa, 
             'has_audio': has_audio,
-            'raw_audio_16k': wav,
+            'raw_audio_path': item['wav'], # NeMo only supports str input
         }
 
     # modified from 3D-Speaker/speakerlab/bin/infer_sv_batch.py:IterWavList.load_wav

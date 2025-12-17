@@ -22,7 +22,7 @@ AutoModel.register(TouchTTSConfig, TouchTTS)
 AutoConfig.register("osum_echat", OSUMEChatConfig)
 AutoModel.register(OSUMEChatConfig, OSUMEChat)
 
-# speaker attributed ASU
-from west.models.touch_asu import TouchASUSpeakerAttributed, TouchASUSpeakerAttributedConfig
-AutoConfig.register("touch_asu_speaker_attributed", TouchASUSpeakerAttributedConfig)
-AutoModel.register(TouchASUSpeakerAttributedConfig, TouchASUSpeakerAttributed)
+# SD-ASU
+from west.models.touch_asu import TouchASUWithDiarModule, TouchASUWithDiarModuleConfig
+AutoConfig.register("touch_asu_with_diar_module", TouchASUWithDiarModuleConfig)
+AutoModel.register(TouchASUWithDiarModuleConfig, TouchASUWithDiarModule)

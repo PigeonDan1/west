@@ -133,8 +133,11 @@ class SpeechDataset(IterableDataset):
         offset = 0
 
         # add raw waveforms for speaker encoder
-        if len(seqs) > 0 and 'raw_audio_16k' in seqs[0]:
-            ret['raw_audio_16k'] = []
+        if len(seqs) > 0:
+            if 'raw_audio_16k' in seqs[0]:
+                ret['raw_audio_16k'] = []   # for speaker branch
+            if 'raw_audio_path' in seqs[0]:
+                ret['raw_audio_path'] = []  # for sd branch
 
         for i, seq in enumerate(seqs):
             for k in self.extractor.fields_pack_offset:
@@ -150,6 +153,8 @@ class SpeechDataset(IterableDataset):
             # add raw waveforms for speaker encoder
             if 'raw_audio_16k' in seq:
                 ret['raw_audio_16k'].append(seq['raw_audio_16k'])
+            elif 'raw_audio_path' in seq:
+                ret['raw_audio_path'].append(seq['raw_audio_path'])
             else:
                 # hopefully never reach here, since 'has_audio' is always True
                 # to avoid error when some data has no raw audio
@@ -195,7 +200,10 @@ class SpeechDataset(IterableDataset):
                 ret['attention_mask'] = ret['input_ids'].ne(
                     self.tokenizer.pad_token_id)
         for k in fields_static:
-            ret[k] = torch.tensor([s[k] for s in seqs], dtype=torch.int)
+            if isinstance(seqs[0][k], str):
+                ret[k] = [s[k] for s in seqs]
+            else:
+                ret[k] = torch.tensor([s[k] for s in seqs], dtype=torch.int)
         if not pack:
             ret['batch_idx'] = torch.tensor(list(range(len(seqs))),
                                             dtype=torch.int)

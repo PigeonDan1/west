@@ -1,7 +1,7 @@
 {
   "encoder_ds_rate": 4,
   "encoder_projector_ds_rate": 2,
-  "llm_model_name_or_path": "/wangshuai/models/Qwen2-7B-Instruct",
+  "llm_model_name_or_path": "Qwen/Qwen2-7B-Instruct",
   "lora_config": {
     "inference_mode": false,
     "lora_alpha": 16,
@@ -18,16 +18,15 @@
     ],
     "task_type": "CAUSAL_LM"
   },
-  "model_type": "touch_asu_speaker_attributed",
+  "model_type": "touch_asu_with_diar_module",
   "projector_hidden_size": 3584,
   "transformers_version": "4.52.3",
   "wenet_model_name_or_path": "/F00120240032/SLD/tmp/ckpt_pretrained/firered_wenet",
-  "speaker_encoder_id": "iic/speech_campplus_sv_zh_en_16k-common_advanced",
-  "speaker_emb_size": 512,
-  "speaker_downsample_rate": 4,
+  "diar_model_path": "/lihaoyu/workspace/SA-ASR/StreamingSortformer/pretrained/diar_streaming_sortformer_4spk-v2.nemo",
+  "diar_emb_size": 4,
+  "diar_downsample_rate": 5,
   "asr_projector_frozen": false,
-  "speaker_projector_frozen": false,
-  "speaker_downsampler_frozen": false,
-  "pretrained_ckpt_path": "exp/Qwen2-7B-Instruct-firered/debug/aishell_mlc_data-stage1-asr_projector_trainable-from_ziyi_4000_steps"
+  "diar_projector_frozen": false,
+  "diar_module_frozen": true,
+  "max_speech_frames": 15000
 }
-

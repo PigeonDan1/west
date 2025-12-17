@@ -8,3 +8,6 @@ webdataset==0.2.111
 WeTextProcessing==1.0.1
 git+https://github.com/wenet-e2e/wenet.git
 git+https://github.com/wenet-e2e/wespeaker.git
+s3tokenizer
+gxl_ai_utils
+langid
